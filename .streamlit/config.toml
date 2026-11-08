@@ -1,0 +1,11 @@
+# Original "bean" colour theme: warm cream paper, deep espresso text, sienna accent.
+[theme]
+base = "light"
+primaryColor = "#A8481F"
+backgroundColor = "#FBF6EC"
+secondaryBackgroundColor = "#F0E4CF"
+textColor = "#2E2118"
+font = "serif"
+
+[server]
+maxUploadSize = 50
