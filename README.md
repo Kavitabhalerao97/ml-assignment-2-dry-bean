@@ -1,34 +1,36 @@
 # Machine Learning Assignment 2 – Dry Bean Classification
 
-Five classification models on the UCI Dry Bean dataset, compared with six metrics, plus a Streamlit app ("Bean Sorter Lab") that loads the saved models and evaluates them on an uploaded test CSV.
+In this project I train 5 classification models on the UCI Dry Bean dataset and compare them using 6 metrics. I also built a small Streamlit app. It loads the saved models and checks them on a test csv that the user uploads.
 
 ## a. Problem Statement
 
-Predict which of seven dry bean varieties a grain belongs to, using 16 shape measurements taken from a photograph of the grain. This is a **multiclass classification** problem. The goal is to train five different classifiers on the same data, compare them on the same held-out test set with Accuracy, AUC, Precision, Recall, F1 and MCC, and offer an interactive app to inspect them.
+A bean can be one of 7 types. We have 16 measurements of its shape (size, roundness and so on) taken from a photo. The task is to predict the bean type from these measurements. This is a multiclass classification problem.
+
+I train 5 different models on the same data, test them on the same test set, and compare Accuracy, AUC, Precision, Recall, F1 and MCC.
 
 ## b. Dataset Description
 
-- **Source:** UCI Machine Learning Repository – *Dry Bean Dataset* (Koklu & Ozkan, 2020) – <https://archive.ics.uci.edu/dataset/602/dry+bean+dataset>
-- **Size:** 13,611 rows and 16 features + 1 target in the original file. 68 fully duplicated rows were found and removed **before** splitting, leaving **13,543 rows**.
-- **Missing values:** 0 in every column.
-- **Target:** `Class`, 7 classes.
-- **Split:** stratified 80/20 → 10,834 training rows, 2,709 test rows (`test_data.csv`).
+- **Source:** UCI Machine Learning Repository, Dry Bean Dataset (Koklu and Ozkan, 2020) – <https://archive.ics.uci.edu/dataset/602/dry+bean+dataset>
+- **Rows:** 13,611 in the original file. 68 rows were exact duplicates, so I removed them before splitting. That leaves **13,543 rows**.
+- **Features:** 16 (all numbers). **Target:** `Class` with 7 classes.
+- **Missing values:** none, 0 in every column.
+- **Train/test split:** 80/20, stratified. 10,834 rows for training and 2,709 rows for testing (`test_data.csv`).
 
-| Feature (name as in the file) | Meaning |
+| Feature (name in the file) | What it means |
 |---|---|
-| Area | Number of pixels inside the bean's boundary |
+| Area | Number of pixels inside the bean |
 | Perimeter | Length of the bean's border |
-| MajorAxisLength | Length of the longest line that can be drawn across the bean |
-| MinorAxisLength | Longest line perpendicular to the major axis |
-| AspectRation | Ratio between major and minor axis length (the spelling is from the original dataset) |
-| Eccentricity | Eccentricity of the ellipse that has the same moments as the bean region |
-| ConvexArea | Pixels in the smallest convex polygon that contains the bean |
-| EquivDiameter | Diameter of a circle with the same area as the bean |
-| Extent | Ratio of bounding-box pixels to bean area |
-| Solidity | Ratio of convex-shell pixels to bean pixels (convexity) |
-| roundness | 4·π·Area / Perimeter² |
+| MajorAxisLength | Longest line that can be drawn across the bean |
+| MinorAxisLength | Longest line across the bean at right angles to the major axis |
+| AspectRation | Major axis length divided by minor axis length (the spelling is from the original file) |
+| Eccentricity | How stretched the bean is, like an ellipse with the same moments |
+| ConvexArea | Pixels in the smallest convex shape that fits around the bean |
+| EquivDiameter | Diameter of a circle that has the same area as the bean |
+| Extent | Bean area compared with its bounding box |
+| Solidity | Convex shape pixels compared with bean pixels |
+| roundness | 4 × pi × Area / Perimeter squared |
 | Compactness | EquivDiameter / MajorAxisLength |
-| ShapeFactor1 – ShapeFactor4 | Four further shape descriptors (the dataset documentation does not define them in more detail) |
+| ShapeFactor1 to ShapeFactor4 | Four more shape numbers (the dataset notes do not explain them further) |
 
 **Class counts after removing duplicates (13,543 rows):**
 
@@ -42,22 +44,22 @@ Predict which of seven dry bean varieties a grain belongs to, using 16 shape mea
 | BARBUNYA | 1,322 |
 | BOMBAY | 522 |
 
-The classes are imbalanced (BOMBAY is the smallest), which is why a stratified split and macro averaging are used.
+The classes are not equal in size. BOMBAY is the smallest. This is why I used a stratified split and macro averaging.
 
 ## c. Links
 
-- **GitHub repository:** `<ADD GITHUB LINK HERE>`
-- **Live Streamlit app:** `<ADD STREAMLIT LINK HERE>`
+- **GitHub repository:** https://github.com/Kavitabhalerao97/ml-assignment-2-dry-bean
+- **Live Streamlit app:** https://ml-assignment-2-dry-bean-3sdwzb2sa3yqt4dqhpuhha.streamlit.app/
 
 ## d. Models Used
 
-All models are scikit-learn `Pipeline` objects. Where a model needs scaled inputs, a `StandardScaler` is the first pipeline step, so it is fitted on training rows only (no data leakage). `RANDOM_SEED = 7` is used everywhere.
+Every model is a scikit-learn `Pipeline`. For the models that need scaling, a `StandardScaler` is the first step. The pipeline fits the scaler only on the training rows, so the test data never leaks into training. I used `RANDOM_SEED = 7` everywhere.
 
-- **Logistic Regression** – a linear model that gives each class a score from a weighted sum of the features and converts the scores to probabilities (`max_iter=2000`, scaled inputs).
-- **Decision Tree** – learns a series of yes/no questions on feature thresholds. `max_depth=8` limits how deep the tree grows so it does not memorise the training data. No scaling needed.
-- **K-Nearest Neighbor (KNN)** – classifies a bean by majority vote of its 7 closest training beans in scaled feature space (`n_neighbors=7`: odd to reduce ties, and neither too noisy nor too smooth).
-- **Naive Bayes (Gaussian)** – uses Bayes' rule and assumes each feature is normally distributed and independent within a class. Very fast, but many bean measurements are strongly correlated, which breaks the independence assumption.
-- **Support Vector Machine (SVM)** – an RBF-kernel SVC that finds a curved boundary with the widest margin between classes (scaled inputs). `probability=True` is switched on so AUC can be calculated; this makes training slower.
+- **Logistic Regression** – a simple linear model. It adds up the features with weights and turns the result into class probabilities. Uses scaled data, `max_iter=2000`.
+- **Decision Tree** – asks a chain of yes/no questions about the features. I set `max_depth=8` so it does not just memorise the training data. Scaling is not needed.
+- **K-Nearest Neighbor (KNN)** – looks at the 7 closest training beans and takes a vote. I chose `n_neighbors=7` because it is an odd number (fewer ties) and not too small or too big. Uses scaled data.
+- **Naive Bayes (Gaussian)** – uses Bayes' rule and assumes every feature is normally distributed and independent of the others. It is very fast, but many bean features are closely related, so the independence idea does not fit well.
+- **Support Vector Machine (SVM)** – RBF kernel. It finds a curved boundary with the biggest gap between classes. Uses scaled data. I turned on `probability=True` so that AUC can be calculated, which makes it slower.
 
 ### Comparison table (test set, 2,709 rows)
 
@@ -69,9 +71,9 @@ All models are scikit-learn `Pipeline` objects. Where a model needs scaled input
 | Naive Bayes | 0.7619 | 0.9665 | 0.7660 | 0.7632 | 0.7622 | 0.7125 |
 | Support Vector Machine | 0.9288 | 0.9956 | 0.9424 | 0.9399 | 0.9411 | 0.9138 |
 
-(Copied from `results/metrics_comparison.md`, produced by `train_models.py`.)
+(These numbers come from `results/metrics_comparison.md`, which `train_models.py` creates.)
 
-**Note on averaging.** The target has 7 classes, so Precision, Recall and F1 use **macro** averaging: the metric is computed for each class separately and then averaged with equal weight, so the small BOMBAY class counts as much as the big DERMASON class. **AUC** is computed **one-vs-rest** (each class against all the others) from the predicted probabilities, then macro averaged.
+**About the averaging:** there are 7 classes, so Precision, Recall and F1 are **macro** averages. The score is worked out for each class and then averaged, so each class counts the same, even the small BOMBAY class. **AUC** is **one-vs-rest**: each class is compared against all the other classes using the predicted probabilities, and then the 7 values are averaged.
 
 ## Observations
 
@@ -87,25 +89,25 @@ All models are scikit-learn `Pipeline` objects. Where a model needs scaled input
 ## Project Structure
 
 ```
-├── app.py                  # Streamlit app (loads saved models, never trains)
-├── train_models.py         # trains, evaluates and saves all 5 models
-├── explore_data.py         # dataset exploration + creates data/dry_bean.csv
-├── requirements.txt        # pinned dependencies
+├── app.py                  # Streamlit app (only loads saved models)
+├── train_models.py         # trains, tests and saves the 5 models
+├── explore_data.py         # looks at the data and makes data/dry_bean.csv
+├── requirements.txt        # packages with fixed versions
 ├── README.md
-├── test_data.csv           # held-out 20% test split (features + Class)
+├── test_data.csv           # the 20% test split (features + Class)
 ├── .gitignore
-├── .streamlit/config.toml  # custom colour theme
+├── .streamlit/config.toml  # app colours
 ├── data/
 │   ├── raw/Dry_Bean_Dataset.xlsx
-│   └── dry_bean.csv        # cleaned copy (duplicates removed)
+│   └── dry_bean.csv        # clean copy (duplicates removed)
 ├── model/
 │   ├── logistic_regression.joblib
 │   ├── decision_tree.joblib
 │   ├── knn.joblib
 │   ├── naive_bayes.joblib
 │   ├── svm.joblib
-│   ├── label_encoder.joblib    # maps class names <-> numbers
-│   └── feature_columns.json    # feature names and order the models expect
+│   ├── label_encoder.joblib    # class names <-> numbers
+│   └── feature_columns.json    # feature names and their order
 └── results/
     ├── metrics_comparison.csv
     └── metrics_comparison.md
@@ -113,7 +115,7 @@ All models are scikit-learn `Pipeline` objects. Where a model needs scaled input
 
 ## How to Run Locally
 
-Needs **Python 3.12 or newer** (the pinned numpy 2.5.4 requires it).
+You need Python 3.12 or newer (the fixed numpy version needs it).
 
 ```bash
 python3 -m venv .venv
@@ -122,11 +124,11 @@ pip install -r requirements.txt
 ```
 
 ```bash
-python explore_data.py     # optional: prints dataset facts, rebuilds data/dry_bean.csv
+python explore_data.py     # optional: prints facts about the data and makes data/dry_bean.csv
 ```
 
 ```bash
-python train_models.py     # trains and saves the 5 models, prints the comparison table
+python train_models.py     # trains and saves the 5 models and prints the comparison table
 ```
 
 ```bash
@@ -135,8 +137,8 @@ streamlit run app.py       # opens the app in the browser
 
 ## How to Use the App
 
-1. In the sidebar, click **Download sample test data** (or prepare your own CSV with the 16 feature columns and a `Class` column).
-2. Upload the CSV with the sidebar uploader. Only test data is uploaded; the models are never retrained.
+1. In the sidebar, click **Download sample test data**. You can also use your own csv, but it needs the 16 feature columns and a `Class` column.
+2. Upload the csv in the sidebar. Only test data is uploaded. The models are never trained again.
 3. Pick a model from the dropdown.
-4. Use the tabs: **Metrics** (6 metric cards), **Confusion matrix** (heatmap), **Classification report**, **Compare all 5 models** (table with best values highlighted + bar chart) and **Data preview**.
-5. If the file is missing columns, has unknown labels, or does not contain all 7 classes, the app shows a clear message instead of crashing (AUC is shown as N/A when not all 7 classes are present).
+4. Look at the tabs: **Metrics** (6 cards), **Confusion matrix**, **Classification report**, **Compare all 5 models** (table plus bar chart, best value highlighted) and **Data preview**.
+5. If the file has missing columns, unknown labels, or does not contain all 7 classes, the app shows a message and does not crash. AUC shows N/A when not all 7 classes are in the file.

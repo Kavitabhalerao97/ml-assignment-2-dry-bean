@@ -1,11 +1,11 @@
-"""
-app.py  -  Streamlit app: Dry Bean classifier evaluation board.
+# app.py
+# Streamlit app for the Dry Bean project.
+#
+# The app only loads the models that train_models.py already saved.
+# It does not train anything. You upload a test csv (16 feature columns plus
+# the real "Class" column), pick a model, and it shows the metrics,
+# the confusion matrix and the classification report.
 
-The app only LOADS the models saved by train_models.py. It never trains
-(this file contains no training code at all). The user uploads test data that
-contains the 16 feature columns plus the true 'Class' column, picks a model,
-and the app shows metrics, a confusion matrix and a classification report.
-"""
 import json
 from pathlib import Path
 
@@ -57,14 +57,12 @@ st.markdown(
 )
 
 
-# ---------------------------------------------------------------- loading ---
+# loading
 @st.cache_resource(show_spinner="Loading saved models ...")
 def load_assets():
-    """Load every saved model and preprocessing artifact (done once).
-
-    Safety note: joblib files are pickles, so only load files you trust. These
-    are produced by this repo's own train_models.py - never by uploaded data.
-    """
+    # Loads all saved models once and keeps them in memory.
+    # Note: joblib files are pickles, so only load files you trust.
+    # These come from our own train_models.py, never from the uploaded csv.
     models = {name: joblib.load(MODEL_DIR / file) for name, file in MODEL_FILES.items()}
     encoder = joblib.load(MODEL_DIR / "label_encoder.joblib")
     with open(MODEL_DIR / "feature_columns.json") as handle:
@@ -72,10 +70,10 @@ def load_assets():
     return models, encoder, feature_columns
 
 
-# ------------------------------------------------------------- evaluation ---
+# evaluation
 @st.cache_data(show_spinner=False)
 def evaluate(model_name, features, y_true, _model, n_classes):
-    """Score one saved model on the uploaded data. Nothing is trained here."""
+    # works out the scores of one saved model on the uploaded data (no training)
     y_pred = _model.predict(features)
     present = np.unique(y_true)
 
@@ -116,7 +114,7 @@ def stat_card(label, value):
         f'<div class="value">{value}</div></div>', unsafe_allow_html=True)
 
 
-# ------------------------------------------------------------------ pages ---
+# pages
 def welcome(models_ready):
     st.markdown(
         '<div class="hero"><h1>🫘 Bean Sorter Lab</h1>'
@@ -181,7 +179,7 @@ def main():
 
     with st.sidebar:
         st.markdown("## 🫘 Bean Sorter Lab")
-        st.write("Five classifiers, trained once on the UCI **Dry Bean** dataset "
+        st.write("Five models, trained once on the UCI **Dry Bean** dataset "
                  "(16 shape measurements, 7 bean types), are loaded from disk here. "
                  "Upload test data to evaluate them.")
         model_name = st.selectbox("Choose a model", list(MODEL_FILES))
@@ -195,7 +193,7 @@ def main():
         welcome(True)
         return
 
-    # ---- read + validate ----------------------------------------------------
+    # read the file and check it
     try:
         upload.seek(0)  # Streamlit reruns the script; always read from the start
         raw = pd.read_csv(upload)
