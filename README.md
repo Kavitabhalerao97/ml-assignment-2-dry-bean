@@ -79,12 +79,12 @@ Every model is a scikit-learn `Pipeline`. For the models that need scaling, a `S
 
 | ML Model Name | Observation about model performance |
 |---|---|
-| Logistic Regression | TODO – write in my own words |
-| Decision Tree | TODO – write in my own words |
-| KNN | TODO – write in my own words |
-| Naive Bayes | TODO – write in my own words |
-| Support Vector Machine | TODO – write in my own words |
-| Overall, Winner for your dataset? | TODO – write in my own words |
+| Logistic Regression | Logistic Regression performed well, with 92.32% accuracy. Its results are close to the other top models. This shows that even a simple model can give good results for this dataset. |
+| Decision Tree | Decision Tree achieved 91.55% accuracy. Its performance is good, but slightly lower than Logistic Regression, KNN and SVM. It was able to classify most of the data correctly. |
+| KNN | KNN achieved 92.36% accuracy, which is almost the same as Logistic Regression. Scaling the data helped KNN compare the features properly and make better predictions. |
+| Naive Bayes | Naive Bayes achieved 76.19% accuracy, which is lower than all the other models. It may be because this model assumes that the features are independent, but some features in this dataset may be related to each other. |
+| Support Vector Machine | SVM gave the best results, with 92.88% accuracy. It also achieved the highest scores in all the other evaluation metrics. It seems to separate the different classes better, even when some beans have similar features. |
+| Overall, Winner for your dataset? | I would choose Support Vector Machine as the winner because it performed best in all six evaluation metrics. Logistic Regression and KNN also gave very close results, but SVM performed slightly better overall. |
 
 ## Project Structure
 
